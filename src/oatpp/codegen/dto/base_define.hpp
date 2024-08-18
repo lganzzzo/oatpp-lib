@@ -55,8 +55,8 @@ private: \
 public: \
 \
   template<typename ... Args> \
-  static Wrapper createShared(Args... args){ \
-    return Wrapper(std::make_shared<Z__CLASS>(args...), Wrapper::Class::getType()); \
+  static Wrapper createShared(Args&&... args){ \
+    return Wrapper(std::make_shared<Z__CLASS>(std::forward<Args>(args)...), Wrapper::Class::getType()); \
   }
 
 // Fields
