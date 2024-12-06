@@ -178,6 +178,11 @@ public:
     oatpp::Boolean hide;
 
     /**
+     * Is endpoint deprecated.
+     */
+    oatpp::Boolean deprecated;
+
+    /**
      * Tags to group endpoints in the documentation.
      */
     std::list<oatpp::String> tags;

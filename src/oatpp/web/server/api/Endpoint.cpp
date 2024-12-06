@@ -53,7 +53,7 @@ Endpoint::Info::Param& Endpoint::Info::Params::operator [](const oatpp::String& 
   return m_params[aname];
 }
 
-Endpoint::Info::Info() : hide(false)
+Endpoint::Info::Info() : hide(false), deprecated(false)
 {}
 
 std::shared_ptr<Endpoint::Info> Endpoint::Info::createShared(){
