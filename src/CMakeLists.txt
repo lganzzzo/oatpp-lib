@@ -318,6 +318,8 @@ set_target_properties(oatpp PROPERTIES
         CXX_STANDARD 17
         CXX_EXTENSIONS OFF
         CXX_STANDARD_REQUIRED ON
+        VERSION "${oatpp_VERSION}"
+        SOVERSION "${oatpp_VERSION_MAJOR}.${oatpp_VERSION_MINOR}"
 )
 if (MSVC)
     target_compile_options(oatpp PRIVATE /permissive-)
@@ -368,6 +370,8 @@ if(OATPP_LINK_TEST_LIBRARY)
 			CXX_STANDARD 11
 			CXX_EXTENSIONS OFF
 			CXX_STANDARD_REQUIRED ON
+                        VERSION "${oatpp_VERSION}"
+                        SOVERSION "${oatpp_VERSION_MAJOR}.${oatpp_VERSION_MINOR}"
 	)
 	if (MSVC)
 		target_compile_options(oatpp-test PRIVATE /permissive-)

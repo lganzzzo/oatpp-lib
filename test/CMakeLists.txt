@@ -139,6 +139,8 @@ set_target_properties(oatppAllTests PROPERTIES
     CXX_STANDARD 17
     CXX_EXTENSIONS OFF
     CXX_STANDARD_REQUIRED ON
+    VERSION "${oatpp_VERSION}"
+    SOVERSION "${oatpp_VERSION_MAJOR}.${oatpp_VERSION_MINOR}"
 )
 if (MSVC)
     target_compile_options(oatppAllTests PRIVATE /permissive-)
