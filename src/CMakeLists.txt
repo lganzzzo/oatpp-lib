@@ -319,6 +319,7 @@ set_target_properties(oatpp PROPERTIES
         CXX_EXTENSIONS OFF
         CXX_STANDARD_REQUIRED ON
 )
+target_compile_features(oatpp PUBLIC cxx_std_11)
 if (MSVC)
     target_compile_options(oatpp PRIVATE /permissive-)
 endif()
