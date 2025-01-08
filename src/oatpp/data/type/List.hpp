@@ -109,7 +109,8 @@ namespace __class {
     static Type createType() {
       Type::Info info;
       info.params.push_back(T::Class::getType());
-      info.polymorphicDispatcher = new typename StandardCollection<std::list<T>, T, List>::PolymorphicDispatcher();
+      static std::unique_ptr<typename StandardCollection<std::list<T>, T, List>::PolymorphicDispatcher> disp(new typename StandardCollection<std::list<T>, T, List>::PolymorphicDispatcher());
+      info.polymorphicDispatcher = disp.get();
       info.isCollection = true;
       return Type(__class::AbstractList::CLASS_ID, info);
     }

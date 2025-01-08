@@ -301,12 +301,13 @@ namespace __class {
       return properties;
     }
 
-    static Type* createType() {
+    static std::unique_ptr<Type> createType() {
       Type::Info info;
       info.nameQualifier = T::Z__CLASS_TYPE_NAME();
-      info.polymorphicDispatcher = new PolymorphicDispatcher();
+      static std::unique_ptr<PolymorphicDispatcher> disp(new PolymorphicDispatcher());
+      info.polymorphicDispatcher = disp.get();
       info.parent = T::getParentType();
-      return new Type(CLASS_ID, info);
+      return std::unique_ptr<Type>(new Type(CLASS_ID, info));
     }
 
   public:
@@ -316,8 +317,8 @@ namespace __class {
      * @return - &id:oatpp::data::type::Type;
      */
     static Type* getType() {
-      static Type* type = createType();
-      return type;
+      static std::unique_ptr<Type> type = createType();
+      return type.get();
     }
     
   };

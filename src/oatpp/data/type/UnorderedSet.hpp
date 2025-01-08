@@ -109,7 +109,8 @@ private:
   static Type createType() {
     Type::Info info;
     info.params.push_back(T::Class::getType());
-    info.polymorphicDispatcher = new typename StandardCollection<std::unordered_set<T>, T, UnorderedSet>::PolymorphicDispatcher();
+    static std::unique_ptr<typename StandardCollection<std::unordered_set<T>, T, UnorderedSet>::PolymorphicDispatcher> disp(new typename StandardCollection<std::unordered_set<T>, T, UnorderedSet>::PolymorphicDispatcher());
+    info.polymorphicDispatcher = disp.get();
     info.isCollection = true;
     return Type(__class::AbstractUnorderedSet::CLASS_ID, info);
   }

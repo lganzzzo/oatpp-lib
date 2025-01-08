@@ -71,12 +71,12 @@ static v_int64 Z__PROPERTY_OFFSET_##NAME() { \
 } \
 \
 static oatpp::data::type::BaseObject::Property* Z__PROPERTY_SINGLETON_##NAME() { \
-  static oatpp::data::type::BaseObject::Property* property = \
+  static std::unique_ptr<oatpp::data::type::BaseObject::Property> property( \
       new oatpp::data::type::BaseObject::Property(Z__PROPERTY_OFFSET_##NAME(), \
                                                   #NAME, \
                                                   #NAME, \
-                                                  TYPE::Class::getType()); \
-  return property; \
+                                                  TYPE::Class::getType())); \
+  return property.get(); \
 } \
 \
 static bool Z__PROPERTY_INIT_##NAME(... /* default initializer for all cases */) { \
@@ -103,12 +103,12 @@ static v_int64 Z__PROPERTY_OFFSET_##NAME() { \
 } \
 \
 static oatpp::data::type::BaseObject::Property* Z__PROPERTY_SINGLETON_##NAME() { \
-  static oatpp::data::type::BaseObject::Property* property = \
+  static std::unique_ptr<oatpp::data::type::BaseObject::Property> property( \
       new oatpp::data::type::BaseObject::Property(Z__PROPERTY_OFFSET_##NAME(), \
                                                   QUALIFIER, \
                                                   #NAME, \
-                                                  TYPE::Class::getType()); \
-  return property; \
+                                                  TYPE::Class::getType())); \
+  return property.get(); \
 } \
 \
 static bool Z__PROPERTY_INIT_##NAME(... /* default initializer for all cases */) { \

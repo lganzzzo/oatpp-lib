@@ -651,7 +651,8 @@ namespace __class {
     static Type createType() {
       Type::Info info;
       info.nameQualifier = type::EnumMeta<T>::getInfo()->nameQualifier;
-      info.polymorphicDispatcher = new PolymorphicDispatcher();
+      static std::unique_ptr<PolymorphicDispatcher> disp(new PolymorphicDispatcher());
+      info.polymorphicDispatcher = disp.get();
       return Type(__class::AbstractEnum::CLASS_ID, info);
     }
 
