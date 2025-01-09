@@ -138,6 +138,19 @@ public:
 
   };
 
+  ENDPOINT_ASYNC("PUT", "/test-with-body", TestWithBody) {
+
+    ENDPOINT_ASYNC_INIT(TestWithBody)
+
+    Action act() override {
+        return request->readBodyToStringAsync().callbackTo(&TestWithBody::onBodyRead);
+    }
+
+    Action onBodyRead(const String& body) {
+      return _return(controller->createResponse(Status::CODE_200, "OK---" + body));
+    }
+  };
+
   ENDPOINT_ASYNC("GET", "chunked/{text-value}/{num-iterations}", Chunked) {
 
     ENDPOINT_ASYNC_INIT(Chunked)

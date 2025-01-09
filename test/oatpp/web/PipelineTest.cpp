@@ -105,19 +105,34 @@ public:
 
 };
 
-const char* const SAMPLE_IN =
+const char* const SAMPLE_IN_1 =
   "GET / HTTP/1.1\r\n"
   "Connection: keep-alive\r\n"
   "Content-Length: 0\r\n"
   "\r\n";
 
-const char* const SAMPLE_OUT =
+const char* const SAMPLE_OUT_1 =
   "HTTP/1.1 200 OK\r\n"
   "Content-Length: 14\r\n"
   "Connection: keep-alive\r\n"
   "Server: oatpp/" OATPP_VERSION "\r\n"
   "\r\n"
   "Hello World!!!";
+
+const char *const SAMPLE_IN_2 =
+  "PUT /test-with-body HTTP/1.1\r\n"
+  "Connection: keep-alive\r\n"
+  "Content-Length: 14\r\n"
+  "\r\n"
+  "Hello World!!!";
+
+const char* const SAMPLE_OUT_2 =
+  "HTTP/1.1 200 OK\r\n"
+  "Content-Length: 19\r\n"
+  "Connection: keep-alive\r\n"
+  "Server: oatpp/" OATPP_VERSION "\r\n"
+  "\r\n"
+  "OK---Hello World!!!";
 
 }
 
@@ -136,12 +151,12 @@ void PipelineTest::onRun() {
     auto connection = clientConnectionProvider->get();
     connection.object->setInputStreamIOMode(oatpp::data::stream::IOMode::BLOCKING);
 
-    std::thread pipeInThread([this, connection] {
+    std::thread pipeInThread1([this, connection] {
 
       oatpp::data::stream::BufferOutputStream pipelineStream;
 
       for (v_int32 i = 0; i < m_pipelineSize; i++) {
-        pipelineStream << SAMPLE_IN;
+        pipelineStream << SAMPLE_IN_1;
       }
 
       auto dataToSend = pipelineStream.toString();
@@ -155,13 +170,13 @@ void PipelineTest::onRun() {
 
     });
 
-    std::thread pipeOutThread([this, connection] {
+    std::thread pipeOutThread1([this, connection] {
 
-      oatpp::String sample = SAMPLE_OUT;
+      oatpp::String sample = SAMPLE_OUT_1;
       oatpp::data::stream::BufferOutputStream receiveStream;
       oatpp::data::buffer::IOBuffer ioBuffer;
 
-      v_io_size transferSize = static_cast<v_io_size>(sample->size() * static_cast<size_t>(m_pipelineSize));
+      auto transferSize = static_cast<v_io_size>(sample->size() * static_cast<size_t>(m_pipelineSize));
 
       OATPP_LOGd(TAG, "want to Receive {} bytes", transferSize)
       oatpp::data::stream::transfer(connection.object.get(), &receiveStream, transferSize, ioBuffer.getData(), ioBuffer.getSize());
@@ -173,8 +188,51 @@ void PipelineTest::onRun() {
 
     });
 
-    pipeOutThread.join();
-    pipeInThread.join();
+    pipeInThread1.join();
+    pipeOutThread1.join();
+
+    connection = clientConnectionProvider->get();
+    connection.object->setInputStreamIOMode(oatpp::data::stream::IOMode::BLOCKING);
+
+    std::thread pipeInThread2([this, connection] {
+
+      oatpp::data::stream::BufferOutputStream pipelineStream;
+
+      for (v_int32 i = 0; i < m_pipelineSize; i++) {
+        pipelineStream << SAMPLE_IN_2;
+      }
+
+      auto dataToSend = pipelineStream.toString();
+      OATPP_LOGD(TAG, "Sending %lu bytes", dataToSend->size())
+
+      oatpp::data::stream::BufferInputStream inputStream(dataToSend);
+
+      oatpp::data::buffer::IOBuffer ioBuffer;
+
+      oatpp::data::stream::transfer(&inputStream, connection.object.get(), 0, ioBuffer.getData(), ioBuffer.getSize());
+
+    });
+
+    std::thread pipeOutThread2([this, connection] {
+
+      oatpp::String sample = SAMPLE_OUT_2;
+      oatpp::data::stream::BufferOutputStream receiveStream;
+      oatpp::data::buffer::IOBuffer ioBuffer;
+
+      auto transferSize = static_cast<v_io_size>(sample->size() * static_cast<size_t>(m_pipelineSize));
+
+      OATPP_LOGD(TAG, "want to Receive %ld bytes", transferSize)
+      oatpp::data::stream::transfer(connection.object.get(), &receiveStream, transferSize, ioBuffer.getData(), ioBuffer.getSize());
+
+      auto result = receiveStream.toString();
+
+      OATPP_ASSERT(result->size() == sample->size() * static_cast<size_t>(m_pipelineSize))
+      //OATPP_ASSERT(result == wantedResult) // headers may come in different order on different OSs
+
+    });
+
+    pipeInThread2.join();
+    pipeOutThread2.join();
 
   }, std::chrono::minutes(10));
 

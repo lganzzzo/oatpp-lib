@@ -52,6 +52,7 @@ private:
   std::shared_ptr<const http::incoming::BodyDecoder> m_bodyDecoder;
 
   mutable bool m_queryParamsParsed; // used for lazy parsing of QueryParams
+  mutable bool m_bodyRead;
   mutable http::QueryParams m_queryParams;
 
   data::Bundle m_bundle;
@@ -138,6 +139,12 @@ public:
    * @return Body decoder
    */
   std::shared_ptr<const http::incoming::BodyDecoder> getBodyDecoder() const;
+
+  /**
+   * Check if body was read.
+   * @return - `true` if body was read.
+   */
+  bool hasReadBody() const;
 
   /**
    * Add http header.
@@ -266,6 +273,7 @@ public:
    */
   template<class Wrapper>
   Wrapper readBodyToDto(const base::ObjectHandle<data::mapping::ObjectMapper>& objectMapper) const {
+    m_bodyRead = true;
     return objectMapper->readFromString<Wrapper>(m_bodyDecoder->decodeToString(m_headers, m_bodyStream.get(), m_connection.get()));
   }
   
@@ -301,6 +309,7 @@ public:
   template<class Wrapper>
   oatpp::async::CoroutineStarterForResult<const Wrapper&>
   readBodyToDtoAsync(const std::shared_ptr<oatpp::data::mapping::ObjectMapper>& objectMapper) const {
+    m_bodyRead = true;
     return m_bodyDecoder->decodeToDtoAsync<Wrapper>(m_headers, m_bodyStream, m_connection, objectMapper);
   }
   

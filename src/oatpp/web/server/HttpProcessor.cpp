@@ -177,9 +177,22 @@ HttpProcessor::ConnectionState HttpProcessor::processNextRequest(ProcessingResou
 
     switch(connectionState) {
 
-      case ConnectionState::ALIVE :
+      case ConnectionState::ALIVE: {
         response->putHeaderIfNotExists(protocol::http::Header::CONNECTION, protocol::http::Header::Value::CONNECTION_KEEP_ALIVE);
+        if(!request->hasReadBody()) {
+          auto contentLengthStr = headersReadResult.headers.getAsMemoryLabel<data::share::StringKeyLabel>(oatpp::web::protocol::http::Header::CONTENT_LENGTH);
+          if(contentLengthStr) {
+            bool success;
+            auto contentLength = utils::conversion::strToInt64(contentLengthStr.toString(), success);
+            if (success && contentLength > 0) {
+              resources.inStream->commitReadOffset(contentLength);
+            }
+          } else {
+            resources.inStream->commitReadOffset(resources.inStream->availableToRead());
+          }
+        }
         break;
+      }
 
       case ConnectionState::CLOSING:
       case ConnectionState::DEAD:
@@ -368,9 +381,22 @@ HttpProcessor::Coroutine::Action HttpProcessor::Coroutine::onResponseFormed() {
 
   switch(m_connectionState) {
 
-    case ConnectionState::ALIVE :
+    case ConnectionState::ALIVE: {
       m_currentResponse->putHeaderIfNotExists(protocol::http::Header::CONNECTION, protocol::http::Header::Value::CONNECTION_KEEP_ALIVE);
+      if(!m_currentRequest->hasReadBody()) {
+        auto contentLengthStr = m_currentRequest->getHeaders().getAsMemoryLabel<data::share::StringKeyLabel>(oatpp::web::protocol::http::Header::CONTENT_LENGTH);
+        if(contentLengthStr) {
+          bool success;
+          auto contentLength = utils::conversion::strToInt64(contentLengthStr.toString(), success);
+          if (success && contentLength > 0) {
+            m_inStream->commitReadOffset(contentLength);
+          }
+        } else {
+          m_inStream->commitReadOffset(m_inStream->availableToRead());
+        }
+      }
       break;
+    }
 
     case ConnectionState::CLOSING:
     case ConnectionState::DEAD:

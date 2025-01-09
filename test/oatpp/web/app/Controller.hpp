@@ -185,6 +185,11 @@ public:
     return createResponse(Status::CODE_200, "");
   }
 
+  ENDPOINT("PUT", "/test-with-body", testWithBody,
+           BODY_STRING(String, body)) {
+    return createResponse(Status::CODE_200, "OK---" + body);
+  }
+
   class ReadCallback : public oatpp::data::stream::ReadCallback {
   private:
     oatpp::String m_text;
