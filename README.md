@@ -1,8 +1,3 @@
-
-[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://vshymanskyy.github.io/StandWithUkraine/)
-
----
-
 <div align="center">
   <img alt="Oat++ Logo" src="https://raw.githubusercontent.com/lganzzzo/oatpp-website-res/master/logo_x400.png" width="200px"/>
 </div>
