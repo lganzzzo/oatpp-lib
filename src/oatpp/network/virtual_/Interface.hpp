@@ -193,7 +193,9 @@ public:
   oatpp::String getName() {
     return m_name;
   }
-  
+
+  oatpp::async::CoroutineWaitList m_serverWaitList, m_clientWaitList;
+
 };
   
 }}}

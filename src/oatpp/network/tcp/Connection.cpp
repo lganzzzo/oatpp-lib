@@ -180,7 +180,6 @@ v_io_size Connection::read(void *buff, v_buff_size count, async::Action& action)
       return IOError::BROKEN_PIPE; // Consider all other errors as a broken pipe.
     }
   }
-  return result;
 
 #else
 
@@ -211,9 +210,10 @@ v_io_size Connection::read(void *buff, v_buff_size count, async::Action& action)
     //OATPP_LOGd("Connection", "write errno={}", e)
     return IOError::BROKEN_PIPE; // Consider all other errors as a broken pipe.
   }
-  return result;
 
 #endif
+  if (!result) return IOError::BROKEN_PIPE;
+  return result;
 
 }
 

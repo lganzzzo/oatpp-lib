@@ -94,18 +94,9 @@ public:
    * and then process connections in Asynchronous manner with non-blocking read/write.
    * <br>
    * *It may be implemented later.*
+   * EJ: We need to implement it because it will create too many threads for many interfaces
    */
-  oatpp::async::CoroutineStarterForResult<const provider::ResourceHandle<data::stream::IOStream>&> getAsync() override {
-    /*
-     *  No need to implement this.
-     *  For Asynchronous IO in oatpp it is considered to be a good practice
-     *  to accept connections in a seperate thread with the blocking accept()
-     *  and then process connections in Asynchronous manner with non-blocking read/write
-     *
-     *  It may be implemented later
-     */
-    throw std::runtime_error("[oatpp::network::virtual_::server::ConnectionProvider::getConnectionAsync()]: Error. Not implemented.");
-  }
+  oatpp::async::CoroutineStarterForResult<const provider::ResourceHandle<data::stream::IOStream>&> getAsync() override;
   
 };
   

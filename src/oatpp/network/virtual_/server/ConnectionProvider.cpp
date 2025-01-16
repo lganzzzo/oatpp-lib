@@ -23,6 +23,7 @@
  ***************************************************************************/
 
 #include "ConnectionProvider.hpp"
+#include "oatpp/core/async/ConditionVariable.hpp"
 
 #include <chrono>
 
@@ -68,4 +69,47 @@ provider::ResourceHandle<data::stream::IOStream> ConnectionProvider::get() {
   return provider::ResourceHandle<data::stream::IOStream>(socket, m_invalidator);
 }
 
+oatpp::async::CoroutineStarterForResult<const provider::ResourceHandle<data::stream::IOStream>&>
+ConnectionProvider::getAsync() {
+  
+  class ConnectCoroutine : public oatpp::async::CoroutineWithResult<ConnectCoroutine, const provider::ResourceHandle<oatpp::data::stream::IOStream>&> {
+  private:
+    std::shared_ptr<ConnectionInvalidator> m_invalidator;
+    std::shared_ptr<virtual_::Interface> m_interface;
+    v_io_size m_maxAvailableToRead;
+    v_io_size m_maxAvailableToWrite;
+    std::shared_ptr<Socket> m_socket;
+
+  public:
+    
+    ConnectCoroutine(const std::shared_ptr<ConnectionInvalidator>& invalidator,
+                     const std::shared_ptr<virtual_::Interface>& _interface,
+                     v_io_size maxAvailableToRead,
+                     v_io_size maxAvailableToWrite)
+      : m_invalidator(invalidator)
+      , m_interface(_interface)
+      , m_maxAvailableToRead(maxAvailableToRead)
+      , m_maxAvailableToWrite(maxAvailableToWrite)
+    {}
+    
+    Action act() override {
+      m_socket = m_interface->acceptNonBlocking();
+      if(m_socket){
+        m_interface->m_clientWaitList.notifyFirst();
+        m_socket->setOutputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
+        m_socket->setInputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
+        m_socket->setMaxAvailableToReadWrtie(m_maxAvailableToRead, m_maxAvailableToWrite);
+        return _return(provider::ResourceHandle<data::stream::IOStream>(m_socket, m_invalidator));
+      }
+      return Action::createWaitListAction(
+        &m_interface->m_serverWaitList, 
+        std::chrono::system_clock::now()+std::chrono::milliseconds(100));
+    }
+
+  };
+  
+  return ConnectCoroutine::startForResult(m_invalidator, m_interface, m_maxAvailableToRead, m_maxAvailableToWrite);
+  
+}
+  
 }}}}

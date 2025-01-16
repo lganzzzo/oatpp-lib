@@ -270,17 +270,23 @@ oatpp::async::CoroutineStarter Response::sendAsync(const std::shared_ptr<Respons
 
           if (bodySize >= 0) {
 
-            if (bodySize + m_headersWriteBuffer->getCurrentPosition() < m_headersWriteBuffer->getCapacity()) {
-
-              m_headersWriteBuffer->writeSimple(m_this->m_body->getKnownData(), bodySize);
+            if(m_this->m_body->getKnownData() == nullptr) {
               return oatpp::data::stream::BufferOutputStream::flushToStreamAsync(m_headersWriteBuffer, m_stream)
+                .next(data::stream::transferAsync(m_this->m_body, m_stream, bodySize, data::buffer::IOBuffer::createShared()))
                 .next(finish());
-
             } else {
+              if (bodySize + m_headersWriteBuffer->getCurrentPosition() < m_headersWriteBuffer->getCapacity()) {
 
-              return oatpp::data::stream::BufferOutputStream::flushToStreamAsync(m_headersWriteBuffer, m_stream)
-                .next(m_stream->writeExactSizeDataAsync(m_this->m_body->getKnownData(), bodySize))
-                .next(finish());
+                m_headersWriteBuffer->writeSimple(m_this->m_body->getKnownData(), bodySize);
+                return oatpp::data::stream::BufferOutputStream::flushToStreamAsync(m_headersWriteBuffer, m_stream)
+                  .next(finish());
+
+              } else {
+
+                return oatpp::data::stream::BufferOutputStream::flushToStreamAsync(m_headersWriteBuffer, m_stream)
+                  .next(m_stream->writeExactSizeDataAsync(m_this->m_body->getKnownData(), bodySize))
+                  .next(finish());
+              }
             }
 
           } else {

@@ -23,6 +23,7 @@
  ***************************************************************************/
 
 #include "ConnectionProvider.hpp"
+#include "oatpp/core/async/ConditionVariable.hpp"
 
 namespace oatpp { namespace network { namespace virtual_ { namespace client {
 
@@ -73,6 +74,7 @@ ConnectionProvider::getAsync() {
     v_io_size m_maxAvailableToRead;
     v_io_size m_maxAvailableToWrite;
     std::shared_ptr<virtual_::Interface::ConnectionSubmission> m_submission;
+    std::shared_ptr<Socket> m_socket;
   public:
     
     ConnectCoroutine(const std::shared_ptr<ConnectionInvalidator>& invalidator,
@@ -88,29 +90,24 @@ ConnectionProvider::getAsync() {
     Action act() override {
       m_submission = m_interface->connectNonBlocking();
       if(m_submission){
-        return yieldTo(&ConnectCoroutine::obtainSocket);
+        m_interface->m_serverWaitList.notifyFirst();
+        if (m_submission->isValid()) return yieldTo(&ConnectCoroutine::obtainSocket);
+        return error<Error>("[oatpp::network::virtual_::client::ConnectionProvider::getConnectionAsync()]: Error. submission not valid.");
       }
-      return waitRepeat(std::chrono::milliseconds(100));
+      return repeat();
     }
 
     Action obtainSocket() {
-
-      if(m_submission->isValid()) {
-
-        auto socket = m_submission->getSocketNonBlocking();
-
-        if(socket) {
-          socket->setOutputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
-          socket->setInputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
-          socket->setMaxAvailableToReadWrtie(m_maxAvailableToRead, m_maxAvailableToWrite);
-          return _return(provider::ResourceHandle<data::stream::IOStream>(socket, m_invalidator));
-        }
-
-        return waitRepeat(std::chrono::milliseconds(100));
+      auto socket = m_submission->getSocketNonBlocking();
+      if(socket) {
+        socket->setOutputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
+        socket->setInputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
+        socket->setMaxAvailableToReadWrtie(m_maxAvailableToRead, m_maxAvailableToWrite);
+        return _return(provider::ResourceHandle<data::stream::IOStream>(socket, m_invalidator));
       }
-
-      return error<Error>("[oatpp::network::virtual_::client::ConnectionProvider::getConnectionAsync()]: Error. Can't connect.");
-
+      return Action::createWaitListAction(
+        &m_interface->m_clientWaitList, 
+        std::chrono::system_clock::now()+std::chrono::milliseconds(100));
     }
     
   };

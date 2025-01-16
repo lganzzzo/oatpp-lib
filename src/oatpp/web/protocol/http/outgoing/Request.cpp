@@ -138,12 +138,18 @@ void Request::send(data::stream::OutputStream* stream){
 
     if(bodySize >= 0) {
 
-      if(bodySize + buffer.getCurrentPosition() < buffer.getCapacity()) {
-        buffer.writeSimple(m_body->getKnownData(), bodySize);
+      if (m_body->getKnownData() == nullptr) {
         buffer.flushToStream(stream);
+        buffer.setCurrentPosition(0);
+        data::stream::transfer(m_body, stream, bodySize, buffer.getData(), buffer.getCapacity());
       } else {
-        buffer.flushToStream(stream);
-        stream->writeExactSizeDataSimple(m_body->getKnownData(), bodySize);
+        if(bodySize + buffer.getCurrentPosition() < buffer.getCapacity()) {
+          buffer.writeSimple(m_body->getKnownData(), bodySize);
+          buffer.flushToStream(stream);
+        } else {
+          buffer.flushToStream(stream);
+          stream->writeExactSizeDataSimple(m_body->getKnownData(), bodySize);
+        }
       }
 
     } else {
@@ -217,16 +223,20 @@ oatpp::async::CoroutineStarter Request::sendAsync(std::shared_ptr<Request> _this
 
         if(bodySize >= 0) {
 
-          if(bodySize + m_headersWriteBuffer->getCurrentPosition() < m_headersWriteBuffer->getCapacity()) {
-
-            m_headersWriteBuffer->writeSimple(m_this->m_body->getKnownData(), bodySize);
+          if (m_this->m_body->getKnownData() == nullptr) {
             return oatpp::data::stream::BufferOutputStream::flushToStreamAsync(m_headersWriteBuffer, m_stream)
-              .next(finish());
+                  .next(data::stream::transferAsync(m_this->m_body, m_stream, bodySize, data::buffer::IOBuffer::createShared()))
+                  .next(finish());
           } else {
-
-            return oatpp::data::stream::BufferOutputStream::flushToStreamAsync(m_headersWriteBuffer, m_stream)
-              .next(m_stream->writeExactSizeDataAsync(m_this->m_body->getKnownData(), bodySize))
-              .next(finish());
+            if(bodySize + m_headersWriteBuffer->getCurrentPosition() < m_headersWriteBuffer->getCapacity()) {
+              m_headersWriteBuffer->writeSimple(m_this->m_body->getKnownData(), bodySize);
+              return oatpp::data::stream::BufferOutputStream::flushToStreamAsync(m_headersWriteBuffer, m_stream)
+                .next(finish());
+            } else {
+              return oatpp::data::stream::BufferOutputStream::flushToStreamAsync(m_headersWriteBuffer, m_stream)
+                .next(m_stream->writeExactSizeDataAsync(m_this->m_body->getKnownData(), bodySize))
+                .next(finish());
+            }
           }
 
         } else {
