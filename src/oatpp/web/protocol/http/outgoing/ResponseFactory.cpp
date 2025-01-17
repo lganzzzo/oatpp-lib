@@ -25,6 +25,7 @@
 #include "./ResponseFactory.hpp"
 
 #include "./BufferBody.hpp"
+#include "./FileBody.hpp"
 
 namespace oatpp { namespace web { namespace protocol { namespace http { namespace outgoing {
 
@@ -36,6 +37,11 @@ ResponseFactory::createResponse(const Status& status) {
 std::shared_ptr<Response>
 ResponseFactory::createResponse(const Status& status, const oatpp::String& text) {
   return Response::createShared(status, BufferBody::createShared(text));
+}
+
+std::shared_ptr<Response>
+ResponseFactory::createFileResponse(const Status& status, const oatpp::String& filepath) {
+  return Response::createShared(status, FileBody::createShared(filepath));
 }
 
 std::shared_ptr<Response>

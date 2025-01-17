@@ -54,6 +54,14 @@ public:
   static std::shared_ptr<Response> createResponse(const Status& status, const oatpp::String& text);
 
   /**
+   * Create &id:oatpp::web::protocol::http::outgoing::Response; with &id:oatpp::web::protocol::http::outgoing::FileBody;.
+   * @param status - &id:oatpp::web::protocol::http::Status;.
+   * @param filepath - &id:oatpp::String;.
+   * @return - `std::shared_ptr` to &id:oatpp::web::protocol::http::outgoing::Response;.
+   */
+  static std::shared_ptr<Response> createFileResponse(const Status& status, const oatpp::String& filepath);
+
+  /**
    * Create &id:oatpp::web::protocol::http::outgoing::Response; with &id:oatpp::web::protocol::http::outgoing::DtoBody;.
    * @param status - &id:oatpp::web::protocol::http::Status;.
    * @param dto - see [Data Transfer Object (DTO)](https://oatpp.io/docs/components/dto/).
